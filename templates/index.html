@@ -1,0 +1,62 @@
+<!DOCTYPE html><head><meta charset="UTF-8">
+<link rel="apple-touch-icon" type="image/png" href="https://static.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png" />
+<meta name="apple-mobile-web-app-title" content="CodePen">
+<link rel="shortcut icon" type="image/x-icon" href="https://static.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico" />
+<link rel="mask-icon" type="" href="https://static.codepen.io/assets/favicon/logo-pin-8f3771b1072e3c38bd662872f6b673a722f4b3ca2421637d5596661b4e2132cc.svg" color="#111" />
+<title>MapaPOA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js" type="text/javascript"></script>
+<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+<link rel='stylesheet' href='https://mconf.pythonanywhere.com/static/estilo.css'>
+<script>
+  window.console = window.console || function(t) {};
+</script>
+<script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+
+</head>
+<body translate="no">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+<div class="container center">
+<div class="row">
+<div class="col-md-12">
+<h1 class="white">MapaPOA: Mapeamento Social</h1>
+<br><big><p class="white">Mapeamento por localização e índices sócio-econômicos a partir do CEP + agrupamentos para reduzir disparidades.
+</p></big>
+<p class="white">
+<br><b>1)</b> Preencha o CEP dos estudantes conforme o modelo abaixo:<br><br><img src="http://mapapoa.pythonanywhere.com/static/ceps.png" style="border-radius:5px;border-color: #ff3f3f"></p>
+</div>
+</div>
+<p class="white"><br><b>2)</b> Envie o arquivo em formato <b>.csv</b> ("Salvar Como" no Excel ou Google Sheets):<br></p>
+<form name="upload" method="post" action="#" enctype="multipart/form-data" accept-charset="utf-8">
+<div class="row">
+<div class="col-md-6 col-md-offset-3 center">
+<div class="btn-container">
+<h1 class="imgupload"><i class="fa fa-file-image-o"></i></h1>
+<h1 class="imgupload ok"><i class="fa fa-check"></i></h1>
+<h1 class="imgupload stop"><i class="fa fa-times"></i></h1>
+<p id="namefile">Arquivo .csv</p>
+<button type="button" id="btnup" class="btn btn-primary btn-lg">Enviar Arquivo</button>
+<input type="file" value="" name="input_file" id="input_file">
+</div>
+</div>
+</div>
+<p class="white"><br><b>3)</b> Clique em <i>Processsar</i> e aguarde: <br></p>
+<div class="row">
+<div class="col-md-12">
+<input type="submit" value="Processar" class="btn btn-primary" id="submitbtn">
+<button type="button" class="btn btn-default" disabled="disabled" id="fakebtn">Processar <i class="fa fa-minus-circle"></i></button>
+<button type="button" class="btn btn-default" style="display:none" disabled="disabled" id="fakebtn2">Processando, aguarde  ... <i class="fa fa-minus-circle"></i></button>
+<br></div>
+</div>
+</form>
+<br><hr>
+<p class="white">Desenvolvido por <a href="http://fernandorauber.com.br">Fernando Rauber</a> (fernando.rauber@ufrgs.br)<br></p>
+</div>
+<script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-157cd5b220a5c80d4ff8e0e70ac069bffd87a61252088146915e8726e5d9f147.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+<script src="https://mapapoa.pythonanywhere.com/static/upload.js" type="text/javascript" id="rendered-js"></script>
+</body></html>
