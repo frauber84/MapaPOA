@@ -18,7 +18,7 @@ app.config["DEBUG"] = True
 CorrecaoMonetaria = 1   # 1.8257 --> fator de correção monetária, 82,57% , IGPM- 2010/2020 #  http://drcalc.net/correcao2.asp?descricao=&valor=515%2C67&diainiSelect=1&mesiniSelect=7&anoiniSelect=2010&diafimSelect=1&mesfimSelect=6&anofimSelect=2020&prorata=s&indice=6&juro=0%2C00&periodojuro=m&capitalizacao=c&inicialjuros=&finaljuros=&multa=0%2C00&honorario=0%2C00&Executar2=Executar+o+c%E1lculo&ml=&it=
 
 def RetiraAcentos(string):
-    A = [ 'á', 'ã', 'à', 'â']
+    A = [ 'á', 'ã', 'à', 'ã']
     E = [ 'é', 'ê' ]
     I = [ 'í', 'î' ]
     O = [ 'ô', 'ó', 'õ' ]
@@ -42,10 +42,12 @@ class Aluno:
         self.end = end
         self.bairro = bairro
         self.cidade = cidade
-        self.regiao = 'Não categorizado'
+        self.regiao = 'Fora de POA'
+
         self.renda = 0
         self.vulnerabilidade = 0
         Reg=False
+
         for regiao in regioes_poa.Regioes:  # bairro de poa
             for bar in regiao.bairros:
                 if RetiraAcentos(self.bairro.lower() ) == bar:
@@ -58,8 +60,8 @@ class Aluno:
                     self.regiao = regiao.nome
                     RegioesAlunos.append(self.regiao)
                     Reg=True
-        if Reg==False:  # outrar região
-            RegioesAlunos.append('Não categorizado')
+        if Reg==False:  # outra região
+            RegioesAlunos.append('Fora de POA')
         self.uf = uf
         self.idh = '0'
         try:
@@ -84,6 +86,14 @@ class Aluno:
         self.indice = idx
         self.cartao = cartao # cartão UFRGS
 
+        if self.idh == '0' or self.idh == 0:  # Se não tiver IDH pegar o da cidade como média
+            try:
+                self.idh = str(idh.IDH_RS[RetiraAcentos(self.cidade.lower())] )
+            except:
+                self.idh = '0'
+
+
+
 def getIDH(obj):
     return float(obj.idh.replace(',','.'))
 
@@ -105,13 +115,15 @@ def process_data(input_file, formato):
     i=0
     j=0
 
-    print(formato)
+    #print(formato)
     input_file.save('input/temp.input')
 
+    '''
     if 'xlsx' in formato:
         print('xlsx')
     elif 'csx' in formato:
         print('csx')
+    '''
 
     #chatice: lidar com encodings bizarros do excel
     try:
@@ -132,7 +144,7 @@ def process_data(input_file, formato):
         i=0
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in spamreader:
-            print(row)
+            #print(row)
             try:
                 i=row[0]
                 c=row[1]
@@ -176,7 +188,7 @@ def process_data(input_file, formato):
     '''
 
     for CEP in CEPS:
-        print("Consultando CEP: " + str(CEP))
+        #print("Consultando CEP: " + str(CEP))
         try:
             x2 = consulta_correios.busca_cep(str(CEP).replace("-","") )
             kValida=False
@@ -185,18 +197,37 @@ def process_data(input_file, formato):
                     citystate = key['city/state'].split('/')
                     cidade = citystate[0]
                     uf = citystate[1]
-                    Alunos.append( Aluno(key['zipcode'], key['address'],key['neighborhood'],cidade,uf, i, IDENTIFICACAO[j]) )
-                    Bairro.append( key['neighborhood'] )
+
+                    if cidade == "Porto Alegre":
+                        Alunos.append( Aluno(key['zipcode'], key['address'],key['neighborhood'],cidade,uf, i, IDENTIFICACAO[j]) )
+                        Bairro.append( key['neighborhood'] )
+                    else:
+                        Alunos.append( Aluno(key['zipcode'], key['address'],'Fora de POA',cidade,uf, i, IDENTIFICACAO[j]) )
+                        Bairro.append( 'Fora de POA' )
+
                     i+=1
                     kValida=True
                 elif key== 'error' and kValida==False:
-                    print("Erro, tentando consulta alternativa:" + str(CEP) )
+                    #print("Consultando CEP (2):" + str(CEP) )
                     x = pycep_correios.consultar_cep(CEP)
-                    Alunos.append( Aluno(x['cep'], x['end'],x['bairro'],x['cidade'],x['uf'], i, IDENTIFICACAO[j]) )
-                    Bairro.append( x['bairro'] )
+
+                    if "porto alegre" in x['cidade'].lower():
+                        Alunos.append( Aluno(x['cep'], x['end'],x['bairro'],x['cidade'],x['uf'], i, IDENTIFICACAO[j]) )
+                        Bairro.append( x['bairro'] )
+                    else:
+
+                        cidadesmetro = [ 'alvorada', 'ararica', 'arroio dos ratos', 'cachoeirinha', 'campo bom', 'canoas', 'capela de santana', 'charqueadas', 'dois irmaos', 'eldorado do sul', 'estancia velha', 'esteio', 'glorinha', 'gravatai', 'guaiba', 'igrejinha', 'ivoti', 'montenegro', 'nova hartz', 'nova santa rita', 'novo hamburgo', 'parobe', 'portao', 'rolante', 'santo antonio da patrulha', 'sao jeronimo', 'sao leopoldo', 'sao sebastiao do cai', 'sapiranga', 'sapucaia do sul', 'taquara', 'triunfo', 'viamao'  ]
+
+                        if RetiraAcentos(x['cidade'].lower() ) in cidadesmetro:
+                            Alunos.append( Aluno(x['cep'], x['end'],'Região Metropolitana',x['cidade'],x['uf'], i, IDENTIFICACAO[j]) )
+                            Bairro.append( 'Fora de POA' )
+                        else:
+                            Alunos.append( Aluno(x['cep'], x['end'],'Fora de POA',x['cidade'],x['uf'], i, IDENTIFICACAO[j]) )
+                            Bairro.append( 'Fora de POA' )
                     i+=1
         except:
-            print("erro")
+            # erro
+            pass
         j+=1
 
     Bairros = Counter(Bairro)   # conta ocorrências de bairros
@@ -280,7 +311,7 @@ def process_data(input_file, formato):
 
         linha=2 # novo índice (linha)
         for aluno in lista:
-            worksheet.write( 'A' + str(linha), int(aluno.cartao) )
+            worksheet.write( 'A' + str(linha), str(aluno.cartao) )
             worksheet.write( 'B' + str(linha), str(aluno.end) )
             worksheet.write( 'C' + str(linha), str(aluno.bairro) )
             worksheet.write( 'D' + str(linha), str(aluno.cidade) )
@@ -411,7 +442,7 @@ def process_data(input_file, formato):
                 estilo.set_bg_color('#D3D3D3')
             wGRUPOS2.write( 'A' + str(linha), '', estilo)
 
-        wGRUPOS2.write( 'B' + str(linha), int(aluno.cartao), estilo)
+        wGRUPOS2.write( 'B' + str(linha), str(aluno.cartao), estilo)
         wGRUPOS2.write( 'C' + str(linha), str(aluno.end), estilo)
         wGRUPOS2.write( 'D' + str(linha), str(aluno.bairro), estilo)
         wGRUPOS2.write( 'I' + str(linha), str(aluno.regiao), estilo)
@@ -450,7 +481,7 @@ def process_data(input_file, formato):
             if linha-1 != alunoCount:  # último aluno
                 wGRUPOS3.write( 'G' + str(linha-1), '', estilo)
 
-        wGRUPOS3.write( 'B' + str(linha-1), int(aluno.cartao), estilo)
+        wGRUPOS3.write( 'B' + str(linha-1), str(aluno.cartao), estilo)
         wGRUPOS3.write( 'C' + str(linha-1), str(aluno.end), estilo)
         wGRUPOS3.write( 'D' + str(linha-1), str(aluno.bairro), estilo)
         wGRUPOS3.write( 'I' + str(linha-1), str(aluno.regiao), estilo)
@@ -490,7 +521,7 @@ def process_data(input_file, formato):
                 wGRUPOS4.write( 'G' + str(linha-1), '', estilo)
 
 
-        wGRUPOS4.write( 'B' + str(linha-2), int(aluno.cartao), estilo)
+        wGRUPOS4.write( 'B' + str(linha-2), str(aluno.cartao), estilo)
         wGRUPOS4.write( 'C' + str(linha-2), str(aluno.end), estilo)
         wGRUPOS4.write( 'D' + str(linha-2), str(aluno.bairro), estilo)
         wGRUPOS4.write( 'I' + str(linha-2), str(aluno.regiao), estilo)
